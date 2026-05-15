@@ -1,0 +1,15 @@
+# PSX reference
+psx-docs/
+**/*.BIN
+
+# executables
+**/*.out
+**/*.elf
+**/*.exe
+build/
+
+# emacs useless files
+**/\#*
+**/.\#*
+**/*~
+**/*\#
