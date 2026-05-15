@@ -1,6 +1,7 @@
 # PSX reference
 psx-docs/
 **/*.BIN
+**/*.pdf
 
 # executables
 **/*.out
