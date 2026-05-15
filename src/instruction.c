@@ -21,5 +21,5 @@ uint32_t decode_instruction_rt(instruction_t inst)
 uint32_t decode_instruction_imm(instruction_t inst)
 {
     // bits [15:0]
-    return inst.u32 & 0xff;
+    return inst.u32 & 0xffff;
 }

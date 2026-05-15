@@ -34,6 +34,17 @@ uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
     return u32_instruction;
 }
 
+// TODO: actually write store32
+uint32_t interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
+{
+    if ((offset & 0x3) != 0) { // test if multiple of 4
+        err_quit("Unaligned memory access: "F_HEX32, offset);
+    }
+
+    return 0;
+}
+
+
 void interconnect_init(inter_t *inter)
 {
     if (!read_bios("SCPH1001.BIN")) {

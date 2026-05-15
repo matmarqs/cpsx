@@ -39,7 +39,32 @@ static void op_lui(cpu_t *cpu, instruction_t inst)
     cpu->reg[reg_index] = (value << 16) & 0xffff0000;
     cpu->reg[0] = 0; // $zero is always 0
 
-    printf("lui $%d, "F_HEX32"\n", reg_index, value);
+    printf("lui $%d, 0x%x\n", reg_index, value);
+}
+
+static void op_ori(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t imm = decode_instruction_imm(inst);
+    cpu->reg[rt] = cpu->reg[rs] | imm;
+    cpu->reg[0] = 0; // $zero is always 0
+
+    printf("ori $%d, $%d, 0x%x\n", rt, rt, imm);
+}
+
+static void op_sw(cpu_t *cpu, instruction_t inst)
+{
+    // sw rt, offset(rs)
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t imm = decode_instruction_imm(inst);
+    int16_t offset = (int16_t) imm; // 16-bit signed offset
+    cpu_store32(cpu, rs + offset, rt);
+    cpu->reg[rt] = cpu->reg[rs] | imm;
+    cpu->reg[0] = 0; // $zero is always 0
+
+    printf("ori $%d, $%d, 0x%x\n", rt, rt, imm);
 }
 
 static void init_optable(op_table_t *optable)
@@ -48,5 +73,7 @@ static void init_optable(op_table_t *optable)
         optable[i] = op_unhandled;
     }
 
+    optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
+    optable[43] = op_sw;  // 43 = (101011)_2 -> SW (Store Word)
 }
