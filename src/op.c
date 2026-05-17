@@ -60,11 +60,9 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t imm = decode_instruction_imm(inst);
     int16_t offset = (int16_t) imm; // 16-bit signed offset
-    cpu_store32(cpu, rs + offset, rt);
-    cpu->reg[rt] = cpu->reg[rs] | imm;
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_store32(cpu, cpu->reg[rs] + offset, cpu->reg[rt]);
 
-    printf("ori $%d, $%d, 0x%x\n", rt, rt, imm);
+    printf("sw $%d, 0x%x(%d)\n", rt, offset, rs);
 }
 
 static void init_optable(op_table_t *optable)
