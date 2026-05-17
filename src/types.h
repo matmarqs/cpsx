@@ -37,4 +37,9 @@ struct cpu_t {
 #define F_HEX32 "0x%08x"
 #define UNUSED(x) (void)(x)
 
+#define MASK_02BITS 0x3     // 0x3 = 0b11
+#define MASK_05BITS 0x1f    // 0x1f = 0b11111
+#define MASK_06BITS 0x3f    // 0x3f = 0b111111
+#define MASK_16BITS 0xffff  // 0xffff = 0b1111111111111111
+
 #endif // _TYPES_H

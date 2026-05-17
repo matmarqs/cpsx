@@ -9,7 +9,7 @@
 
 uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
 {
-    if ((offset & 0x3) != 0) { // test if multiple of 4
+    if ((offset & MASK_02BITS) != 0) { // test if multiple of 4
         err_quit("store32: Unaligned memory access: "F_HEX32, offset);
     }
 
@@ -40,7 +40,7 @@ uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
 // TODO: actually write store32
 bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
 {
-    if ((offset & 0x3) != 0) { // test if multiple of 4
+    if ((offset & MASK_02BITS) != 0) { // test if multiple of 4
         err_quit("store32: Unaligned memory access: "F_HEX32, offset);
     }
 
@@ -62,7 +62,6 @@ bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
 
     return true;
 }
-
 
 void interconnect_init(inter_t *inter)
 {
