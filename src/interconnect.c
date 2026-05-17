@@ -17,9 +17,9 @@ uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
 
     uint8_t *target;
 
-    if (BIOS_ADDR <= offset && offset < BIOS_ADDR + BIOS_SIZE) {
+    if (PSX_ADDR_BIOS <= offset && offset < PSX_ADDR_BIOS + PSX_SIZE_BIOS) {
         target = inter->bios;
-        offset -= BIOS_ADDR;
+        offset -= PSX_ADDR_BIOS;
     }
     else {
         err_quit("load32: Unhandled memory address: "F_HEX32, offset);
@@ -46,12 +46,12 @@ bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
 
     uint32_t *target;
 
-    if (IO_PORTS1_ADDR <= offset && offset < IO_PORTS1_ADDR + IO_PORTS1_SIZE) {
+    if (PSX_ADDR_MEMCONTROL <= offset && offset < PSX_ADDR_MEMCONTROL + PSX_SIZE_MEMCONTROL) {
         // for now we will not emulate low-level stuff related to these I/O Ports (HW registers)
-        target = (uint32_t *) (inter->io_ports1 + offset - IO_PORTS1_ADDR);
+        target = (uint32_t *) (inter->memcontrol + offset - PSX_ADDR_MEMCONTROL);
     }
-    else if (IO_PORTS2_ADDR <= offset && offset < IO_PORTS2_ADDR + IO_PORTS2_SIZE) {
-        target = (uint32_t *) (inter->io_ports2 + offset - IO_PORTS2_ADDR);
+    else if (PSX_ADDR_EXPREGION2 <= offset && offset < PSX_ADDR_EXPREGION2 + PSX_SIZE_EXPREGION2) {
+        target = (uint32_t *) (inter->expregion2 + offset - PSX_ADDR_EXPREGION2);
     }
     else {
         err_quit("store32: Unhandled memory address: "F_HEX32, offset);
@@ -70,6 +70,6 @@ void interconnect_init(inter_t *inter)
         err_quit("Failed to read BIOS 'SCPH1001.BIN' at current directory");
     }
     inter->bios = global_bios;
-    inter->io_ports1 = global_io_ports_1;
-    inter->io_ports2 = global_io_ports_2;
+    inter->memcontrol = global_memcontrol;
+    inter->expregion2 = global_expregion2;
 }

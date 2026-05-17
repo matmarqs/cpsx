@@ -22,7 +22,7 @@ The first instructions of the BIOS are
 0xbfc0000c: 0xac281010    sw  $8, 0x1010($1)
 ```
 
-The memory region `0x1f801000 -- 0x1f802fff` is for hardware registers (or I/O ports).
+The memory region `0x1f801000 -- 0x1f802fff` is for hardware registers (MEMCONTROL or I/O ports).
 
 On <https://psx-spx.consoledev.net/memorycontrol/>, we have this text:
 

@@ -38,7 +38,7 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
     cpu->interconnect = interconnect;
 
     // initialize registers
-    cpu->pc = BIOS_ADDR;
+    cpu->pc = PSX_ADDR_BIOS;
     for (int i = 0; i < 32; i++) {
         cpu->reg[i] = 0xdeadbeef; // initialize the registers with easy recognizable value
     }

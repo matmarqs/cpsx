@@ -15,8 +15,8 @@
 //        FFFE0000h (in KSEG2)     0.5K   Internal CPU control registers (Cache Control)
 typedef struct {
     uint8_t *bios; // BIOS ROM, 512 K
-    uint8_t *io_ports1; // I/O Ports, 4K
-    uint8_t *io_ports2; // Expansion Region 2, 8K
+    uint8_t *memcontrol; // I/O Ports, 4K
+    uint8_t *expregion2; // Expansion Region 2, 8K
 } inter_t;
 
 typedef struct {

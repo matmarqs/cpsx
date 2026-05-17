@@ -62,7 +62,7 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
     int16_t offset = (int16_t) imm; // 16-bit signed offset
     cpu_store32(cpu, cpu->reg[rs] + offset, cpu->reg[rt]);
 
-    printf("sw $%d, 0x%x(%d)\n", rt, offset, rs);
+    printf("sw $%d, 0x%x($%d)\n", rt, offset, rs);
 }
 
 static void init_optable(op_table_t *optable)
