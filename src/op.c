@@ -101,12 +101,28 @@ static void op_addiu(cpu_t *cpu, instruction_t inst)
     printf("addiu $%d, $%d, 0x%x\n", rt, rs, imm);
 }
 
+static void op_j(cpu_t *cpu, instruction_t inst)
+{
+    /* This is a PC-region branch (not PC-relative); the effective target address
+       is in the “current” 256 MB-aligned region. The low 28 bits of the target address
+       is the instr_index field shifted left 2 bits. The remaining upper bits are the
+       corresponding bits of the address of the instruction in the delay slot (not the
+       branch itself). Jump to the effective target address. Execute the instruction that
+       follows the jump, in the branch delay slot, before executing the jump itself. */
+    uint32_t instr_index = decode_instruction_instr_index(inst);
+    // the mask f0000000 is for the most significant 4 bits
+    cpu->pc = (cpu->pc & 0xf0000000) | instr_index << 2;
+
+    printf("j 0x%x\n", cpu->pc);
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
         optable[i] = op_unhandled;
     }
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
+    optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)

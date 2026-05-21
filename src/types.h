@@ -30,6 +30,7 @@ typedef void (*op_table_t)(cpu_t *, instruction_t);
 struct cpu_t {
     uint32_t pc; // program counter
     uint32_t reg[32]; // general purpose registers
+    instruction_t next_instruction; // needed to emulate the branch delay slot of MIPS
     inter_t *interconnect; // struct that holds all other components
     op_table_t *op_table; // table with 64 entries for each MIPS instruction
 };
@@ -37,9 +38,11 @@ struct cpu_t {
 #define F_HEX32 "0x%08x"
 #define UNUSED(x) (void)(x)
 
+// constant for masking bits. the formula is: hex((1 << n) - 1)
 #define MASK_02BITS 0x3     // 0x3 = 0b11
 #define MASK_05BITS 0x1f    // 0x1f = 0b11111
 #define MASK_06BITS 0x3f    // 0x3f = 0b111111
 #define MASK_16BITS 0xffff  // 0xffff = 0b1111111111111111
+#define MASK_26BITS 0x3ffffff // 0x3ffffff = 0b11111111111111111111111111
 
 #endif // _TYPES_H

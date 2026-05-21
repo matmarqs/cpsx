@@ -43,6 +43,7 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
         cpu->reg[i] = 0xdeadbeef; // initialize the registers with easy recognizable value
     }
     cpu->reg[0] = 0; // $zero should contain zero
+    cpu->next_instruction = (instruction_t) { .u32 = 0x0 }; // it's a NOP instruction
 
     // initialize global_optable
     op_init();
@@ -52,9 +53,10 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
 void cpu_main(cpu_t *cpu)
 {
     while (true) {
-        instruction_t instruction = { cpu_load32(cpu, cpu->pc) };
+        instruction_t instruction = cpu->next_instruction;
+        cpu->next_instruction = (instruction_t) { cpu_load32(cpu, cpu->pc) }; // fetch at PC
         uint32_t opcode = decode_instruction_opcode(instruction);
+        cpu->pc += 4; // branch delay slot, this comes first than the execution
         cpu->op_table[opcode](cpu, instruction);
-        cpu->pc += 4;
     }
 }
