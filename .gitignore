@@ -14,3 +14,7 @@ build/
 **/.\#*
 **/*~
 **/*\#
+
+# clangd stuff
+**/compile_commands.json
+**/.cache/

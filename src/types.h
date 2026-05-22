@@ -29,6 +29,7 @@ typedef void (*op_table_t)(cpu_t *, instruction_t);
 
 struct cpu_t {
     uint32_t pc; // program counter
+    uint32_t old_pc;
     uint32_t reg[32]; // general purpose registers
     instruction_t next_instruction; // needed to emulate the branch delay slot of MIPS
     inter_t *interconnect; // struct that holds all other components

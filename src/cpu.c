@@ -39,6 +39,7 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
 
     // initialize registers
     cpu->pc = PSX_ADDR_BIOS;
+    cpu->old_pc = 0;
     for (int i = 0; i < 32; i++) {
         cpu->reg[i] = 0xdeadbeef; // initialize the registers with easy recognizable value
     }
@@ -56,6 +57,10 @@ void cpu_main(cpu_t *cpu)
         instruction_t instruction = cpu->next_instruction;
         cpu->next_instruction = (instruction_t) { cpu_load32(cpu, cpu->pc) }; // fetch at PC
         uint32_t opcode = decode_instruction_opcode(instruction);
+
+        printf(F_HEX32": "F_HEX32"    ", cpu->old_pc, instruction.u32);
+        cpu->old_pc = cpu->pc;
+
         cpu->pc += 4; // branch delay slot, this comes first than the execution
         cpu->op_table[opcode](cpu, instruction);
     }

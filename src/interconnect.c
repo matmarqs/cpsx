@@ -13,8 +13,6 @@ uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
         err_quit("store32: Unaligned memory access: "F_HEX32, offset);
     }
 
-    uint32_t original_addr = offset;
-
     uint8_t *target;
 
     if (PSX_ADDR_BIOS <= offset && offset < PSX_ADDR_BIOS + PSX_SIZE_BIOS) {
@@ -32,7 +30,6 @@ uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
 
     // little-endian: 0x12345678 in memory -> 0x78563412
     uint32_t u32_instruction = (d << 24) | (c << 16) | (b << 8) | a;
-    printf(F_HEX32": "F_HEX32"    ", original_addr, u32_instruction);
 
     return u32_instruction;
 }
