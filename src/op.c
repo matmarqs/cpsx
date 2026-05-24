@@ -116,6 +116,18 @@ static void op_j(cpu_t *cpu, instruction_t inst)
     printf("j 0x%x\n", cpu->pc);
 }
 
+static void op_or(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+
+    cpu->reg[rd] = cpu->reg[rs] | cpu->reg[rt];
+    cpu->reg[0] = 0; // $zero is always 0
+
+    printf("or $%d, $%d, $%d\n", rd, rs, rt);
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
@@ -132,4 +144,5 @@ static void init_optable(op_table_t *optable)
         global_special_optable[i] = op_unhandled;
     }
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
+    global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)
 }
