@@ -50,6 +50,9 @@ bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
     else if (PSX_ADDR_EXPREGION2 <= offset && offset < PSX_ADDR_EXPREGION2 + PSX_SIZE_EXPREGION2) {
         target = (uint32_t *) (inter->expregion2 + offset - PSX_ADDR_EXPREGION2);
     }
+    else if (PSX_ADDR_REGCONTROL <= offset && offset < PSX_ADDR_REGCONTROL + PSX_SIZE_REGCONTROL) {
+        target = (uint32_t *) (inter->regcontrol + offset - PSX_ADDR_REGCONTROL);
+    }
     else {
         err_quit("store32: Unhandled memory address: "F_HEX32, offset);
         return false;
@@ -68,4 +71,5 @@ void interconnect_init(inter_t *inter)
     inter->bios = global_bios;
     inter->memcontrol = global_memcontrol;
     inter->expregion2 = global_expregion2;
+    inter->regcontrol = global_regcontrol;
 }

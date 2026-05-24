@@ -27,4 +27,12 @@ extern uint8_t global_expregion2[PSX_SIZE_EXPREGION2];
 #define PSX_ADDR_EXPREGION3 0x1FA00000
 #define PSX_SIZE_EXPREGION3 (2048*1024)
 
+// FFFE0000h (in KSEG2)     0.5K   Internal CPU control registers (Cache Control)
+// region: 0xfffe0000 <= x < 0xfffe0200
+// Cache Control register is 0xfffe0130 (inside this region)
+#define PSX_ADDR_REGCONTROL 0xFFFE0000
+#define PSX_SIZE_REGCONTROL 512 // 0.5 KB
+
+extern uint8_t global_regcontrol[PSX_SIZE_REGCONTROL];
+
 #endif // _IO_PORTS_H
