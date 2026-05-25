@@ -30,8 +30,8 @@ static void op_unhandled(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t imm = decode_instruction_imm(inst);
 
-    err_quit("\nUnhandled instruction: "F_HEX32" = %06b %05b %05b %016b",
-             inst.u32, opcode, rs, rt, imm);
+    err_debug("\nUnhandled instruction: "F_HEX32" = %06b %05b %05b %016b",
+              inst.u32, opcode, rs, rt, imm);
 }
 
 static void op_lui(cpu_t *cpu, instruction_t inst)
@@ -58,12 +58,12 @@ static void op_ori(cpu_t *cpu, instruction_t inst)
 static void op_sw(cpu_t *cpu, instruction_t inst)
 {
     // sw rt, offset(rs)
-    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t base = decode_instruction_rs(inst);
     uint32_t rt = decode_instruction_rt(inst);
     int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
-    cpu_store32(cpu, cpu->reg[rs] + offset, cpu->reg[rt]);
 
-    printf("sw $%d, 0x%x($%d)\n", rt, offset, rs);
+    printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
+    cpu_store32(cpu, cpu->reg[base] + offset, cpu->reg[rt]);
 }
 
 static void op_special(cpu_t *cpu, instruction_t inst)
@@ -137,8 +137,8 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
     uint32_t sel = decode_instruction_sel(inst);
 
     if (sel != 0) {
-        err_quit("op_mtc0: Not implemented for sel not zero."
-                 "sel = %d", sel);
+        err_debug("op_mtc0: Not implemented for sel not zero."
+                  "sel = %d", sel);
     }
 
     cpu->cop0.reg[rd] = cpu->reg[rt];

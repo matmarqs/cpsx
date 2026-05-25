@@ -8,7 +8,7 @@ BUILD_DIR := ./build
 SRC_DIRS := ./src
 
 # Find all *.c files inside ./src
-SRCS := $(shell find $(SRC_DIRS) -name '*.c')
+SRCS := $(shell find $(SRC_DIRS) -name '*.c' -not -name '*#*')
 
 # Prepends BUILD_DIR and appends .o to every src file
 # As an example, ./your_dir/hello.c turns into ./build/./your_dir/hello.c.o

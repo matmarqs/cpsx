@@ -28,3 +28,15 @@ void err_quit(const char *fmt, ...)
 	va_end(ap);
 	exit(1);
 }
+
+// it's better to trigger the debugger than to quit
+void err_debug(const char *fmt, ...)
+{
+	va_list	ap;
+
+	va_start(ap, fmt);
+	err_doit(0, 0, fmt, ap);
+	va_end(ap);
+
+    __asm__("int3"); // trigger the debugger
+}
