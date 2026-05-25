@@ -49,6 +49,11 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
     // initialize global_optable
     op_init();
     cpu->op_table = global_optable;
+
+    // initialize Coprocessor 0 registers
+    for (int i = 0; i < 64; i++) {
+        cpu->cop0.reg[i] = 0xdeadbeef;
+    }
 }
 
 void cpu_main(cpu_t *cpu)

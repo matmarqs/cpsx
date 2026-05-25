@@ -47,3 +47,9 @@ uint32_t decode_instruction_instr_index(instruction_t inst)
     // 26 bits [25:0]
     return inst.u32 & MASK_26BITS;
 }
+
+uint32_t decode_instruction_sel(instruction_t inst)
+{
+    // 3 bits [2:0]
+    return inst.u32 & MASK_03BITS;
+}

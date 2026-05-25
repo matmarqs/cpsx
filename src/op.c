@@ -8,6 +8,7 @@
 
 op_table_t global_optable[64];
 op_table_t global_special_optable[64];
+op_table_t global_cop0_optable[32];
 
 static void init_optable(op_table_t *optable);
 
@@ -128,6 +129,29 @@ static void op_or(cpu_t *cpu, instruction_t inst)
     printf("or $%d, $%d, $%d\n", rd, rs, rt);
 }
 
+static void op_mtc0(cpu_t *cpu, instruction_t inst)
+{
+    // Move to Coprocessor 0
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+    uint32_t sel = decode_instruction_sel(inst);
+
+    if (sel != 0) {
+        err_quit("op_mtc0: Not implemented for sel not zero."
+                 "sel = %d", sel);
+    }
+
+    cpu->cop0.reg[rd] = cpu->reg[rt];
+    printf("mtc0 $%d, $%d\n", rt, rd);
+}
+
+static void op_cop0(cpu_t *cpu, instruction_t inst)
+{
+    // 5 bits [25:21] decode the COP0 operation
+    uint32_t cop0_op = decode_instruction_rs(inst);
+    global_cop0_optable[cop0_op](cpu, inst);
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
@@ -136,6 +160,7 @@ static void init_optable(op_table_t *optable)
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
     optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
+    optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
     optable[43] = op_sw;  // 43 = (101011)_2 -> SW (Store Word)
@@ -145,4 +170,9 @@ static void init_optable(op_table_t *optable)
     }
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
     global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)
+
+    for (int i = 0; i < 32; i++) {
+        global_cop0_optable[i] = op_unhandled;
+    }
+    global_cop0_optable[4] = op_mtc0; // 4 = (00100)_2 = MTC0 (Move to Coprocessor 0)
 }

@@ -5,6 +5,7 @@
 
 extern op_table_t global_optable[64];
 extern op_table_t global_special_optable[64];
+extern op_table_t global_cop0_optable[32];
 void op_init(void);
 
 #endif
