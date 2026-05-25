@@ -63,6 +63,11 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
 
+    if ((cpu->cop0.reg[12] & 0x10000) != 0) { // $cop0_12 is the status register
+        // Cache is isolated, ignore write
+        printf("sw $%d, 0x%x($%d)\t;; but ignoring store while cache is isolated\n", rt, offset, base);
+        return;
+    }
     printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
     cpu_store32(cpu, cpu->reg[base] + offset, cpu->reg[rt]);
 }
@@ -143,7 +148,7 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
     }
 
     cpu->cop0.reg[rd] = cpu->reg[rt];
-    printf("mtc0 $%d, $%d\n", rt, rd);
+    printf("mtc0 $%d, $cop0_%d\n", rt, rd);
 }
 
 static void op_cop0(cpu_t *cpu, instruction_t inst)

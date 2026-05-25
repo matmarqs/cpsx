@@ -54,6 +54,7 @@ void cpu_init(cpu_t *cpu, inter_t *interconnect)
     for (int i = 0; i < 64; i++) {
         cpu->cop0.reg[i] = 0xdeadbeef;
     }
+    cpu->cop0.reg[12] = 0; // $cop0_12 is the status register
 }
 
 void cpu_main(cpu_t *cpu)
