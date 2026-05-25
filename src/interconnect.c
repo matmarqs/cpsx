@@ -3,7 +3,7 @@
 
 // components
 #include "bios.h"
-#include "io_ports.h"
+#include "mmio.h"
 
 #include <stdio.h>
 
@@ -53,6 +53,9 @@ bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
     else if (PSX_ADDR_REGCONTROL <= offset && offset < PSX_ADDR_REGCONTROL + PSX_SIZE_REGCONTROL) {
         target = (uint32_t *) (inter->regcontrol + offset - PSX_ADDR_REGCONTROL);
     }
+    else if (offset < PSX_ADDR_MAINRAM + PSX_SIZE_MAINRAM) { // PSX_ADDR_MAINRAM is 0x00000000
+        target = (uint32_t *) (inter->mainram + offset - PSX_ADDR_MAINRAM);
+    }
     else {
         err_debug("store32: Unhandled memory address: "F_HEX32, offset);
         return false;
@@ -72,4 +75,5 @@ void interconnect_init(inter_t *inter)
     inter->memcontrol = global_memcontrol;
     inter->expregion2 = global_expregion2;
     inter->regcontrol = global_regcontrol;
+    inter->mainram = global_mainram;
 }
