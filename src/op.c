@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "error.h"
 #include "instruction.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -170,6 +171,29 @@ static void op_bne(cpu_t *cpu, instruction_t inst)
     //printf("bne $%d, $%d, %d\n", rs, rt, target); // print the offset from old PC
 }
 
+static void op_addi(cpu_t *cpu, instruction_t inst)
+{
+    // To add a constant to a 32-bit integer. If overflow occurs, then trap.
+    // The 16-bit signed immediate is added to the 32-bit value in GPR rs to produce a 32-bit result.
+    //   * If the addition results in 32-bit 2’s complement arithmetic overflow, the destination register
+    //     is not modified and an Integer Overflow exception occurs.
+    //   * If the addition does not overflow, the 32-bit result is placed into GPR rt.
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t imm = (int16_t) decode_instruction_imm(inst);
+
+    if (detect_overflow_i32((int32_t)cpu->reg[rs], imm)) {
+        // Integer Overflow exception, but we will handle that later
+        err_debug("op_addi: Integer Overflow Exception caught");
+    }
+    else {
+        cpu->reg[rt] = cpu->reg[rs] + imm;
+        cpu->reg[0] = 0; // $zero is always 0
+    }
+
+    printf("addi $%d, $%d, 0x%x\n", rt, rs, imm);
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
@@ -178,6 +202,7 @@ static void init_optable(op_table_t *optable)
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
     optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
     optable[5]  = op_bne; // 5 = (000101)_2 -> BNE (Branch if Not Equal)
+    optable[8]  = op_addi; // 8 = (001000)_2 -> ADDI (Add Immediate Word)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
     optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)

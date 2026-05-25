@@ -1,5 +1,6 @@
 #include "util.h"
 #include "stdio.h"
+#include <limits.h>
 
 bool read_file(const char *filename, void *buffer, size_t buffer_size)
 {
@@ -25,4 +26,15 @@ bool read_file(const char *filename, void *buffer, size_t buffer_size)
 
     fclose(fp);
     return bytes_read == (size_t)file_size;
+}
+
+bool detect_overflow_i32(int32_t a, int32_t b)
+{
+    if (b > 0) {
+         return a > INT32_MAX - b;
+    }
+    else if (b < 0) {
+         return a < INT32_MIN - b;
+    }
+    return false;
 }
