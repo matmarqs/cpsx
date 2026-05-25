@@ -152,6 +152,24 @@ static void op_cop0(cpu_t *cpu, instruction_t inst)
     global_cop0_optable[cop0_op](cpu, inst);
 }
 
+static void op_bne(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);
+
+    uint32_t target = offset << 2;
+
+    uint32_t if_branch_pc = cpu->pc;
+    if (cpu->reg[rs] != cpu->reg[rt]) {
+        if_branch_pc += target;
+    }
+    cpu->pc = if_branch_pc;
+
+    printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print branch PC (pseudo-instruction, my assembly)
+    //printf("bne $%d, $%d, %d\n", rs, rt, target); // print the offset from old PC
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
@@ -159,6 +177,7 @@ static void init_optable(op_table_t *optable)
     }
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
     optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
+    optable[5]  = op_bne; // 5 = (000101)_2 -> BNE (Branch if Not Equal)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
     optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
