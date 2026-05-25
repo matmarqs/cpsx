@@ -199,6 +199,12 @@ static void op_addi(cpu_t *cpu, instruction_t inst)
     printf("addi $%d, $%d, 0x%x\n", rt, rs, imm);
 }
 
+static void op_lw(cpu_t *cpu, instruction_t inst)
+{
+    // https://www.reddit.com/r/EmuDev/comments/1fxhncn/how_does_the_ps1_load_delay_slots_work/
+    // Load Word instruction has delay slots
+}
+
 static void init_optable(op_table_t *optable)
 {
     for (int i = 0; i < 64; i++) {
