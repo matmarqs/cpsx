@@ -142,7 +142,28 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
                   "sel = %d", sel);
     }
 
-    cpu->cop0.regs[rd] = cpu_reg(cpu, rt);
+    uint32_t value = cpu_reg(cpu, rt);
+
+    switch (rd) { // rd is the cop0 register
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 11:
+    case 13:
+        if (value != 0) {
+            err_debug("op_mtc0: Unhandled write to $cop0_%d", rd);
+        }
+        break;
+    case 12:
+        cpu->cop0.regs[rd] = value;
+        break;
+    default:
+        err_debug("Unhandled $cop0_%d register");
+        break;
+    }
+
     printf("mtc0 $%d, $cop0_%d\n", rt, rd);
 }
 
