@@ -39,8 +39,7 @@ static void op_lui(cpu_t *cpu, instruction_t inst)
 {
     uint32_t reg_index = decode_instruction_rt(inst);
     uint32_t value = decode_instruction_imm(inst);
-    cpu->reg[reg_index] = (value << 16) & 0xffff0000;
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_set_reg(cpu, reg_index, (value << 16) & 0xffff0000);
 
     printf("lui $%d, 0x%x\n", reg_index, value);
 }
@@ -50,8 +49,7 @@ static void op_ori(cpu_t *cpu, instruction_t inst)
     uint32_t rs = decode_instruction_rs(inst);
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t imm = decode_instruction_imm(inst);
-    cpu->reg[rt] = cpu->reg[rs] | imm;
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) | imm);
 
     printf("ori $%d, $%d, 0x%x\n", rt, rs, imm);
 }
@@ -63,13 +61,13 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
 
-    if ((cpu->cop0.reg[12] & 0x10000) != 0) { // $cop0_12 is the status register
+    if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
         // Cache is isolated, ignore write
-        printf("sw $%d, 0x%x($%d)\t;; but ignoring store while cache is isolated\n", rt, offset, base);
+        printf("sw $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
+    cpu_store32(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
     printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
-    cpu_store32(cpu, cpu->reg[base] + offset, cpu->reg[rt]);
 }
 
 static void op_special(cpu_t *cpu, instruction_t inst)
@@ -84,8 +82,7 @@ static void op_sll(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t rd = decode_instruction_rd(inst);
     uint32_t sa = decode_instruction_sa(inst);
-    cpu->reg[rd] = cpu->reg[rt] << sa;
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_set_reg(cpu, rd, cpu_reg(cpu, rt) << sa);
 
     if (!rt && !rd && !sa) { // sll $0, $0, 0 is a nop instruction
         printf("nop\n");
@@ -102,8 +99,7 @@ static void op_addiu(cpu_t *cpu, instruction_t inst)
     uint32_t rs = decode_instruction_rs(inst);
     uint32_t rt = decode_instruction_rt(inst);
     int16_t imm = (int16_t) decode_instruction_imm(inst);
-    cpu->reg[rt] = cpu->reg[rs] + imm;
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) + imm);
 
     printf("addiu $%d, $%d, 0x%x\n", rt, rs, imm);
 }
@@ -129,8 +125,7 @@ static void op_or(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t rd = decode_instruction_rd(inst);
 
-    cpu->reg[rd] = cpu->reg[rs] | cpu->reg[rt];
-    cpu->reg[0] = 0; // $zero is always 0
+    cpu_set_reg(cpu, rd, cpu_reg(cpu, rs) | cpu_reg(cpu, rt));
 
     printf("or $%d, $%d, $%d\n", rd, rs, rt);
 }
@@ -147,7 +142,7 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
                   "sel = %d", sel);
     }
 
-    cpu->cop0.reg[rd] = cpu->reg[rt];
+    cpu->cop0.regs[rd] = cpu_reg(cpu, rt);
     printf("mtc0 $%d, $cop0_%d\n", rt, rd);
 }
 
@@ -165,15 +160,14 @@ static void op_bne(cpu_t *cpu, instruction_t inst)
     int16_t offset = (int16_t) decode_instruction_imm(inst);
 
     uint32_t target = offset << 2;
-
     uint32_t if_branch_pc = cpu->pc;
-    if (cpu->reg[rs] != cpu->reg[rt]) {
+
+    if (cpu_reg(cpu, rs) != cpu_reg(cpu, rt)) {
         if_branch_pc += target;
     }
     cpu->pc = if_branch_pc;
 
-    printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print branch PC (pseudo-instruction, my assembly)
-    //printf("bne $%d, $%d, %d\n", rs, rt, target); // print the offset from old PC
+    printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print branch PC (pseudo-instruction)
 }
 
 static void op_addi(cpu_t *cpu, instruction_t inst)
@@ -187,13 +181,12 @@ static void op_addi(cpu_t *cpu, instruction_t inst)
     uint32_t rt = decode_instruction_rt(inst);
     int16_t imm = (int16_t) decode_instruction_imm(inst);
 
-    if (detect_overflow_i32((int32_t)cpu->reg[rs], imm)) {
+    if (detect_overflow_i32((int32_t)cpu_reg(cpu, rs), imm)) {
         // Integer Overflow exception, but we will handle that later
         err_debug("op_addi: Integer Overflow Exception caught");
     }
     else {
-        cpu->reg[rt] = cpu->reg[rs] + imm;
-        cpu->reg[0] = 0; // $zero is always 0
+        cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) + imm);
     }
 
     printf("addi $%d, $%d, 0x%x\n", rt, rs, imm);
@@ -203,6 +196,35 @@ static void op_lw(cpu_t *cpu, instruction_t inst)
 {
     // https://www.reddit.com/r/EmuDev/comments/1fxhncn/how_does_the_ps1_load_delay_slots_work/
     // Load Word instruction has delay slots
+
+    // From: https://github.com/simias/psx-guide, Section 2.31 Memory Loads
+    /* Instead I’m going to use two sets of general purpose registers: one will be
+       the input set and the other the output set. Each instruction will read its input
+       values from the former set and will write to the latter. Once the instruction is
+       finished we copy the output set into the input set for the next instruction.
+       This way we can update the output register set with the load value before
+       we execute the instruction and it will still see the old value from the input set.
+       And if the instruction writes to the same register it will overwrite the value in
+       the output set. */
+
+    uint32_t base = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
+
+    if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
+        // Cache is isolated, ignore write
+        printf("lw $%d, 0x%x($%d) ;; but ignoring load while cache is isolated\n",
+               rt, offset, base);
+        return;
+    }
+
+    uint32_t addr = cpu_reg(cpu, base) + offset;
+    uint32_t value = cpu_load32(cpu, addr);
+
+    // Schedule the load for next instruction
+    cpu_load_delay(cpu, rt, value);
+
+    printf("lw $%d, 0x%x($%d)\n", rt, offset, base);
 }
 
 static void init_optable(op_table_t *optable)
@@ -218,6 +240,7 @@ static void init_optable(op_table_t *optable)
     optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
+    optable[35] = op_lw;  // 35 = (100011)_2 -> LW (Load Word)
     optable[43] = op_sw;  // 43 = (101011)_2 -> SW (Store Word)
 
     for (int i = 0; i < 64; i++) {

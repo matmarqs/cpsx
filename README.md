@@ -36,6 +36,7 @@ I will try to not read the guide too much. It is incomplete sure, but I want to 
 * Guide for writing a PSX emulator (in Rust): <https://github.com/simias/psx-guide>.
 * No$ PSX specifications: <https://problemkaputt.de/psx-spx.htm>.
 * PSX technical documentation: <https://gamingdoc.org/technical-documentation/consoles/sony-playstation/>.
+* MIPS-I CPU reference R3000: <https://cgi.cse.unsw.edu.au/~cs3231/doc/R3000.pdf>. (More accurate CPU specifications)
 
 ### others
 

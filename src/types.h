@@ -31,17 +31,29 @@ typedef void (*op_table_t)(cpu_t *, instruction_t);
 
 // Coprocessor 0 has 64 registers
 typedef struct cop0_t {
-    uint32_t reg[64];
+    uint32_t regs[64];
 } cop0_t;
+
+typedef struct {
+    uint32_t reg_index;
+    uint32_t value;
+} load_set_t;
 
 struct cpu_t {
     uint32_t pc; // program counter
     uint32_t old_pc;
-    uint32_t reg[32]; // general purpose registers
     instruction_t next_instruction; // needed to emulate the branch delay slot of MIPS
+
+    uint32_t regs[32]; // general purpose registers
+    uint32_t out_regs[32]; /* 2nd set of registers used to emulate load delay slot
+                              they contain the ouput of the current instruction */
+
+    load_set_t load; // load initiated by the current instruction
+
     inter_t *interconnect; // struct that holds all other components
     op_table_t *op_table; // table with 64 entries for each MIPS instruction
     cop0_t cop0;
+
 };
 
 #define F_HEX32 "0x%08x"

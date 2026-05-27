@@ -7,62 +7,86 @@
 
 #include <stdio.h>
 
-uint32_t interconnect_load32(inter_t *inter, uint32_t offset)
+static inline uint32_t addr_normalize(uint32_t addr)
 {
-    if ((offset & MASK_02BITS) != 0) { // test if multiple of 4
-        err_debug("store32: Unaligned memory access: "F_HEX32, offset);
-    }
-
-    uint8_t *target = NULL;
-
-    if (PSX_ADDR_BIOS <= offset && offset < PSX_ADDR_BIOS + PSX_SIZE_BIOS) {
-        target = inter->bios;
-        offset -= PSX_ADDR_BIOS;
-    }
-
-    if (!target) {
-        err_debug("load32: Unhandled memory address: "F_HEX32, offset);
-    }
-
-    uint8_t a = target[offset + 0];
-    uint8_t b = target[offset + 1];
-    uint8_t c = target[offset + 2];
-    uint8_t d = target[offset + 3];
-
-    // little-endian: 0x12345678 in memory -> 0x78563412
-    uint32_t u32_instruction = (d << 24) | (c << 16) | (b << 8) | a;
-
-    return u32_instruction;
+    return addr & MASK_KUSEG;
 }
 
-bool interconnect_store32(inter_t *inter, uint32_t offset, uint32_t value)
+static uint8_t* interconnect_resolve(inter_t *inter, uint32_t memloc, uint32_t *out_offset, bool write)
 {
-    if ((offset & MASK_02BITS) != 0) { // test if multiple of 4
-        err_debug("store32: Unaligned memory access: "F_HEX32, offset);
+    // KSEG2: 0xC0000000 - 0xFFFFFFFF. Not masked by addr_normalize()
+    if (memloc >= 0xC0000000) {
+        // REGCONTROL is only in KSEG2
+        if (PSX_ADDR_REGCONTROL <= memloc && memloc < PSX_ADDR_REGCONTROL + PSX_SIZE_REGCONTROL) {
+            *out_offset = memloc - PSX_ADDR_REGCONTROL;
+            return inter->regcontrol;
+        }
+        return NULL;
     }
 
-    uint32_t *target;
+    uint32_t addr = addr_normalize(memloc);
 
-    if (PSX_ADDR_MEMCONTROL <= offset && offset < PSX_ADDR_MEMCONTROL + PSX_SIZE_MEMCONTROL) {
-        // for now we will not emulate low-level stuff related to these I/O Ports (HW registers)
-        target = (uint32_t *) (inter->memcontrol + offset - PSX_ADDR_MEMCONTROL);
+    if (addr < PSX_SIZE_MAINRAM) {
+        *out_offset = addr;
+        return inter->mainram;
     }
-    else if (PSX_ADDR_EXPREGION2 <= offset && offset < PSX_ADDR_EXPREGION2 + PSX_SIZE_EXPREGION2) {
-        target = (uint32_t *) (inter->expregion2 + offset - PSX_ADDR_EXPREGION2);
+    //// EXPREGION1 not implemented yet
+    //if (addr >= PSX_ADDR_EXPREGION1 && addr < PSX_ADDR_EXPREGION1 + PSX_SIZE_EXPREGION1) {
+    //    *out_offset = addr - PSX_ADDR_EXPREGION1;
+    //    return inter->expregion1;
+    //}
+    if (PSX_ADDR_MEMCONTROL <= addr && addr < PSX_ADDR_MEMCONTROL + PSX_SIZE_MEMCONTROL) {
+        *out_offset = addr - PSX_ADDR_MEMCONTROL;
+        return inter->memcontrol;
     }
-    else if (PSX_ADDR_REGCONTROL <= offset && offset < PSX_ADDR_REGCONTROL + PSX_SIZE_REGCONTROL) {
-        target = (uint32_t *) (inter->regcontrol + offset - PSX_ADDR_REGCONTROL);
+    if (PSX_ADDR_EXPREGION2 <= addr && addr < PSX_ADDR_EXPREGION2 + PSX_SIZE_EXPREGION2) {
+        *out_offset = addr - PSX_ADDR_EXPREGION2;
+        return inter->expregion2;
     }
-    else if (offset < PSX_ADDR_MAINRAM + PSX_SIZE_MAINRAM) { // PSX_ADDR_MAINRAM is 0x00000000
-        target = (uint32_t *) (inter->mainram + offset - PSX_ADDR_MAINRAM);
+    if (PSX_ADDR_BIOS <= addr && addr < PSX_ADDR_BIOS + PSX_SIZE_BIOS) {
+        if (write) {
+            return NULL; // BIOS is read-only
+        }
+        *out_offset = addr - PSX_ADDR_BIOS;
+        return inter->bios;
     }
-    else {
-        err_debug("store32: Unhandled memory address: "F_HEX32, offset);
+
+    return NULL;
+}
+
+uint32_t interconnect_load32(inter_t *inter, uint32_t addr) {
+    if (addr & MASK_02BITS) {
+        err_debug("load32: Unaligned memory access: "F_HEX32, addr);
+        return 0xdeadbeef;
+    }
+
+    uint32_t offset;
+    uint8_t *target = interconnect_resolve(inter, addr, &offset, false);
+
+    if (!target) {
+        err_debug("load32: Unhandled memory address: "F_HEX32, addr);
+        return 0xdeadbeef;
+    }
+
+    uint8_t *p = target + offset;
+    return (p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0];
+}
+
+bool interconnect_store32(inter_t *inter, uint32_t addr, uint32_t value) {
+    if (addr & MASK_02BITS) {
+        err_debug("store32: Unaligned memory access: "F_HEX32, addr);
         return false;
     }
 
-    *target = value;
+    uint32_t offset;
+    uint8_t *target = interconnect_resolve(inter, addr, &offset, true);
 
+    if (!target) {
+        err_debug("store32: Unhandled memory address: "F_HEX32, addr);
+        return false;
+    }
+
+    *(uint32_t*)(target + offset) = value;
     return true;
 }
 
