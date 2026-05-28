@@ -237,6 +237,24 @@ static void op_cop0(cpu_t *cpu, instruction_t inst)
     global_cop0_optable[cop0_op](cpu, inst);
 }
 
+static void op_beq(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);
+
+    uint32_t target = offset << 2;
+    uint32_t if_branch_pc = cpu->pc;
+
+    if (cpu_reg(cpu, rs) == cpu_reg(cpu, rt)) {
+        if_branch_pc += target;
+    }
+    cpu->pc = if_branch_pc;
+
+    printf("beq $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print absolute address (pseudo-instruction)
+
+}
+
 static void op_bne(cpu_t *cpu, instruction_t inst)
 {
     uint32_t rs = decode_instruction_rs(inst);
@@ -251,7 +269,7 @@ static void op_bne(cpu_t *cpu, instruction_t inst)
     }
     cpu->pc = if_branch_pc;
 
-    printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print branch PC (pseudo-instruction)
+    printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print absolute address (pseudo-instruction)
 }
 
 static void op_addi(cpu_t *cpu, instruction_t inst)
@@ -349,6 +367,7 @@ static void init_optable(op_table_t *optable)
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
     optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
     optable[3]  = op_jal; // 3 = (000011)_2 -> JAL (Jump and Link)
+    optable[4]  = op_beq; // 4 = (000100)_2 -> BEQ (Branch on Equal)
     optable[5]  = op_bne; // 5 = (000101)_2 -> BNE (Branch if Not Equal)
     optable[8]  = op_addi; // 8 = (001000)_2 -> ADDI (Add Immediate Word)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
