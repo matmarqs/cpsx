@@ -63,12 +63,12 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
 
     if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
         // Cache is isolated, ignore write
-        printf("sw $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
+        printf("sw $%d, %hd($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
 
     cpu_store32(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
-    printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
+    printf("sw $%d, %hd($%d)\n", rt, offset, base);
 }
 
 static void op_sh(cpu_t *cpu, instruction_t inst)
@@ -79,12 +79,12 @@ static void op_sh(cpu_t *cpu, instruction_t inst)
 
     if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
         // Cache is isolated, ignore write
-        printf("sh $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
+        printf("sh $%d, %hd($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
 
     cpu_store16(cpu, cpu_reg(cpu, base) + offset, (uint16_t) cpu_reg(cpu, rt));
-    printf("sh $%d, 0x%x($%d)\n", rt, offset, base);
+    printf("sh $%d, %hd($%d)\n", rt, offset, base);
 }
 
 static void op_sb(cpu_t *cpu, instruction_t inst)
@@ -95,12 +95,12 @@ static void op_sb(cpu_t *cpu, instruction_t inst)
 
     if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
         // Cache is isolated, ignore write
-        printf("sb $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
+        printf("sb $%d, %hd($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
 
     cpu_store8(cpu, cpu_reg(cpu, base) + offset, (uint8_t) cpu_reg(cpu, rt));
-    printf("sb $%d, 0x%x($%d)\n", rt, offset, base);
+    printf("sb $%d, %hd($%d)\n", rt, offset, base);
 }
 
 static void op_special(cpu_t *cpu, instruction_t inst)
@@ -153,7 +153,7 @@ static void op_addiu(cpu_t *cpu, instruction_t inst)
     int16_t imm = (int16_t) decode_instruction_imm(inst);
     cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) + imm);
 
-    printf("addiu $%d, $%d, 0x%x\n", rt, rs, imm);
+    printf("addiu $%d, $%d, %hd\n", rt, rs, imm);
 }
 
 static void op_j(cpu_t *cpu, instruction_t inst)
@@ -273,7 +273,7 @@ static void op_addi(cpu_t *cpu, instruction_t inst)
         cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) + imm);
     }
 
-    printf("addi $%d, $%d, 0x%x\n", rt, rs, imm);
+    printf("addi $%d, $%d, %hd\n", rt, rs, imm);
 }
 
 static void op_andi(cpu_t *cpu, instruction_t inst)
@@ -306,7 +306,7 @@ static void op_lw(cpu_t *cpu, instruction_t inst)
 
     if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
         // Cache is isolated, ignore write
-        printf("lw $%d, 0x%x($%d) ;; but ignoring load while cache is isolated\n",
+        printf("lw $%d, %hd($%d) ;; but ignoring load while cache is isolated\n",
                rt, offset, base);
         return;
     }
@@ -317,7 +317,28 @@ static void op_lw(cpu_t *cpu, instruction_t inst)
     // Schedule the load for next instruction
     cpu_load_delay(cpu, rt, value);
 
-    printf("lw $%d, 0x%x($%d)\n", rt, offset, base);
+    printf("lw $%d, %hd($%d)\n", rt, offset, base);
+}
+
+static void op_lb(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t base = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
+
+    if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
+        // Cache is isolated, ignore write
+        printf("lb $%d, %hd($%d);; but ignoring load while cache is isolated\n",
+               rt, offset, base);
+        return;
+    }
+
+    uint32_t addr = cpu_reg(cpu, base) + offset;
+    int8_t value = (int8_t) cpu_load8(cpu, addr); // force sign extension
+
+    cpu_load_delay(cpu, rt, (uint32_t) value);
+
+    printf("lb $%d, %hd($%d)\n", rt, offset, base);
 }
 
 static void init_optable(op_table_t *optable)
@@ -335,6 +356,7 @@ static void init_optable(op_table_t *optable)
     optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
+    optable[32] = op_lb; // 32 = (100000)_2 -> LB (Load Byte)
     optable[35] = op_lw;  // 35 = (100011)_2 -> LW (Load Word)
     optable[40] = op_sb;  // 40 = (101000)_2 -> SB (Store Byte)
     optable[41] = op_sh;  // 41 = (101001)_2 -> SH (Store Halfword)

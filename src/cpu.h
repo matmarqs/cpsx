@@ -5,6 +5,7 @@
 
 void cpu_print_state(cpu_t *cpu);
 uint32_t cpu_load32(cpu_t *cpu, uint32_t mem_location);
+uint8_t cpu_load8(cpu_t *cpu, uint32_t offset);
 bool cpu_store32(cpu_t *cpu, uint32_t offset, uint32_t value);
 bool cpu_store16(cpu_t *cpu, uint32_t offset, uint16_t value);
 bool cpu_store8(cpu_t *cpu, uint32_t offset, uint8_t value);

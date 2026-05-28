@@ -116,6 +116,20 @@ bool interconnect_store8(inter_t *inter, uint32_t addr, uint8_t value)
     return true;
 }
 
+uint8_t interconnect_load8(inter_t *inter, uint32_t addr)
+{
+    uint32_t offset;
+    uint8_t *target = interconnect_resolve(inter, addr, &offset, false);
+
+    if (!target) {
+        err_debug("load32: Unhandled memory address: "F_HEX32, addr);
+        return 0xff; // doesn't matter what we return
+    }
+
+    uint8_t *p = target + offset;
+    return p[0];
+}
+
 void interconnect_init(inter_t *inter)
 {
     if (!read_bios("SCPH1001.BIN")) {
