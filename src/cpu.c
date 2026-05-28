@@ -37,6 +37,11 @@ bool cpu_store16(cpu_t *cpu, uint32_t offset, uint16_t value)
     return interconnect_store16(cpu->interconnect, offset, value);
 }
 
+bool cpu_store8(cpu_t *cpu, uint32_t offset, uint8_t value)
+{
+    return interconnect_store8(cpu->interconnect, offset, value);
+}
+
 void cpu_init(cpu_t *cpu, inter_t *interconnect)
 {
     // initialize components
@@ -107,6 +112,6 @@ void cpu_main(cpu_t *cpu)
         cpu->op_table[opcode](cpu, instruction);
 
         // Step 3: Copy out_regs to regs
-        memcpy(cpu->regs, cpu->out_regs, sizeof(cpu->regs)); // To emulate load delays, we will optimize it later
+        memcpy(cpu->regs, cpu->out_regs, sizeof(cpu->regs)); // load delays, we will optimize it later
     }
 }

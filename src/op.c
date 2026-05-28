@@ -66,6 +66,7 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
         printf("sw $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
+
     cpu_store32(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
     printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
 }
@@ -81,8 +82,25 @@ static void op_sh(cpu_t *cpu, instruction_t inst)
         printf("sh $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
-    cpu_store16(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
+
+    cpu_store16(cpu, cpu_reg(cpu, base) + offset, (uint16_t) cpu_reg(cpu, rt));
     printf("sh $%d, 0x%x($%d)\n", rt, offset, base);
+}
+
+static void op_sb(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t base = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
+
+    if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
+        // Cache is isolated, ignore write
+        printf("sb $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
+        return;
+    }
+
+    cpu_store8(cpu, cpu_reg(cpu, base) + offset, (uint8_t) cpu_reg(cpu, rt));
+    printf("sb $%d, 0x%x($%d)\n", rt, offset, base);
 }
 
 static void op_special(cpu_t *cpu, instruction_t inst)
@@ -162,6 +180,14 @@ static void op_jal(cpu_t *cpu, instruction_t inst)
     printf("jal 0x%x\n", cpu->pc);
 }
 
+static void op_jr(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    cpu->pc = cpu_reg(cpu, rs);
+
+    printf("jr $%d\n", rs);
+}
+
 static void op_or(cpu_t *cpu, instruction_t inst)
 {
     uint32_t rs = decode_instruction_rs(inst);
@@ -178,12 +204,6 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
     // Move to Coprocessor 0
     uint32_t rt = decode_instruction_rt(inst);
     uint32_t rd = decode_instruction_rd(inst);
-    uint32_t sel = decode_instruction_sel(inst);
-
-    if (sel != 0) {
-        err_debug("op_mtc0: Not implemented for sel not zero."
-                  "sel = %d", sel);
-    }
 
     uint32_t value = cpu_reg(cpu, rt);
 
@@ -316,6 +336,7 @@ static void init_optable(op_table_t *optable)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
     optable[35] = op_lw;  // 35 = (100011)_2 -> LW (Load Word)
+    optable[40] = op_sb;  // 40 = (101000)_2 -> SB (Store Byte)
     optable[41] = op_sh;  // 41 = (101001)_2 -> SH (Store Halfword)
     optable[43] = op_sw;  // 43 = (101011)_2 -> SW (Store Word)
 
@@ -323,6 +344,7 @@ static void init_optable(op_table_t *optable)
         global_special_optable[i] = op_unhandled;
     }
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
+    global_special_optable[8] = op_jr; // 8 = (001000)_2 = JR (Jump Register)
     global_special_optable[33] = op_addu; // 33 = (100001)_2 = ADDU (Add Unsigned Word)
     global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)
     global_special_optable[43] = op_sltu; // 43 = (101011)_2 = SLTU (Set on Less Than Unsigned)

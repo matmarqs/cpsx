@@ -37,6 +37,8 @@ I will try to not read the guide too much. It is incomplete sure, but I want to 
 * No$ PSX specifications: <https://problemkaputt.de/psx-spx.htm>.
 * PSX technical documentation: <https://gamingdoc.org/technical-documentation/consoles/sony-playstation/>.
 * MIPS-I CPU reference R3000: <https://cgi.cse.unsw.edu.au/~cs3231/doc/R3000.pdf>. (More accurate CPU specifications)
+* Better yet is this R30xx Reference Manual: <https://psx.arthus.net/docs/3715.pdf>. (This is the most accurate one for MIPS I, PS1 R3000A)
+* Great resource, a lot of links and documents: <https://psx.arthus.net/>.
 
 ### others
 
