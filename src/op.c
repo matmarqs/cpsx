@@ -127,7 +127,8 @@ static void op_addu(cpu_t *cpu, instruction_t inst)
 
 static void op_addiu(cpu_t *cpu, instruction_t inst)
 {
-    // The 16-bit signed immediate is added to the 32-bit value in GPR rs and the 32-bit arithmetic result is placed into GPR rt.
+    // The 16-bit signed immediate is added to the 32-bit value in GPR rs
+    // and the 32-bit arithmetic result is placed into GPR rt.
     // No Integer Overflow exception occurs under any circumstances.
     uint32_t rs = decode_instruction_rs(inst);
     uint32_t rt = decode_instruction_rt(inst);
@@ -255,6 +256,15 @@ static void op_addi(cpu_t *cpu, instruction_t inst)
     printf("addi $%d, $%d, 0x%x\n", rt, rs, imm);
 }
 
+static void op_andi(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t imm = decode_instruction_imm(inst);
+    cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) & imm);
+    printf("andi $%d, $%d, 0x%x\n", rt, rs, imm);
+}
+
 static void op_lw(cpu_t *cpu, instruction_t inst)
 {
     // https://www.reddit.com/r/EmuDev/comments/1fxhncn/how_does_the_ps1_load_delay_slots_work/
@@ -301,6 +311,7 @@ static void init_optable(op_table_t *optable)
     optable[5]  = op_bne; // 5 = (000101)_2 -> BNE (Branch if Not Equal)
     optable[8]  = op_addi; // 8 = (001000)_2 -> ADDI (Add Immediate Word)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)
+    optable[12] = op_andi; // 12 = (001100)_2 -> ANDI (And Immediate)
     optable[16] = op_cop0; // 16 = (010000)_2 -> COP0 (Coprocessor 0 Subinstructions)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
