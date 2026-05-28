@@ -70,6 +70,23 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
     printf("sw $%d, 0x%x($%d)\n", rt, offset, base);
 }
 
+static void op_sh(cpu_t *cpu, instruction_t inst)
+{
+    // sw rt, offset(rs)
+    uint32_t base = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
+
+    if ((cpu->cop0.regs[12] & 0x10000) != 0) { // $cop0_12 is the status register
+        // Cache is isolated, ignore write
+        printf("sh $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
+        return;
+    }
+    err_debug("op_sh: WIP");
+    cpu_store32(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
+    printf("sh $%d, 0x%x($%d)\n", rt, offset, base);
+}
+
 static void op_special(cpu_t *cpu, instruction_t inst)
 {
     uint32_t special_op = decode_instruction_special_op(inst);
@@ -90,6 +107,24 @@ static void op_sll(cpu_t *cpu, instruction_t inst)
     else {
         printf("sll $%d, $%d, $%d\n", rd, rt, sa);
     }
+}
+
+static void op_sltu(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+    cpu_set_reg(cpu, rd, (uint32_t) (cpu_reg(cpu, rs) < cpu_reg(cpu, rt))); // store bool (1 or 0) in rd
+    printf("sltu $%d, $%d, $%d\n", rd, rs, rt);
+}
+
+static void op_addu(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+    cpu_set_reg(cpu, rd, cpu_reg(cpu, rs) + cpu_reg(cpu, rt));
+    printf("addu $%d, $%d, $%d\n", rd, rs, rt);
 }
 
 static void op_addiu(cpu_t *cpu, instruction_t inst)
@@ -262,13 +297,16 @@ static void init_optable(op_table_t *optable)
     optable[13] = op_ori; // 13 = (001101)_2 -> ORI (Or Immediate)
     optable[15] = op_lui; // 15 = (001111)_2 -> LUI (Load Upper Immediate)
     optable[35] = op_lw;  // 35 = (100011)_2 -> LW (Load Word)
+    optable[41] = op_sh;  // 41 = (101001)_2 -> SH (Store Halfword)
     optable[43] = op_sw;  // 43 = (101011)_2 -> SW (Store Word)
 
     for (int i = 0; i < 64; i++) {
         global_special_optable[i] = op_unhandled;
     }
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
+    global_special_optable[33] = op_addu; // 33 = (100001)_2 = ADDU (Add Unsigned Word)
     global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)
+    global_special_optable[43] = op_sltu; // 43 = (101011)_2 = SLTU (Set on Less Than Unsigned)
 
     for (int i = 0; i < 32; i++) {
         global_cop0_optable[i] = op_unhandled;
