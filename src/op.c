@@ -72,7 +72,6 @@ static void op_sw(cpu_t *cpu, instruction_t inst)
 
 static void op_sh(cpu_t *cpu, instruction_t inst)
 {
-    // sw rt, offset(rs)
     uint32_t base = decode_instruction_rs(inst);
     uint32_t rt = decode_instruction_rt(inst);
     int16_t offset = (int16_t) decode_instruction_imm(inst);; // 16-bit signed offset
@@ -82,8 +81,7 @@ static void op_sh(cpu_t *cpu, instruction_t inst)
         printf("sh $%d, 0x%x($%d);; but ignoring store while cache is isolated\n", rt, offset, base);
         return;
     }
-    err_debug("op_sh: WIP");
-    cpu_store32(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
+    cpu_store16(cpu, cpu_reg(cpu, base) + offset, cpu_reg(cpu, rt));
     printf("sh $%d, 0x%x($%d)\n", rt, offset, base);
 }
 
@@ -152,6 +150,15 @@ static void op_j(cpu_t *cpu, instruction_t inst)
     cpu->pc = (cpu->pc & 0xf0000000) | instr_index << 2;
 
     printf("j 0x%x\n", cpu->pc);
+}
+
+static void op_jal(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t instr_index = decode_instruction_instr_index(inst);
+    cpu_set_reg(cpu, 31, cpu->pc); // register $31 is $ra (return address)
+    cpu->pc = (cpu->pc & 0xf0000000) | instr_index << 2;
+
+    printf("jal 0x%x\n", cpu->pc);
 }
 
 static void op_or(cpu_t *cpu, instruction_t inst)
@@ -290,6 +297,7 @@ static void init_optable(op_table_t *optable)
     }
     optable[0]  = op_special; // 0 = (000000)_2 -> SPECIAL (depends on last 6 bits)
     optable[2]  = op_j; // 2 = (000010)_2 -> J (Jump)
+    optable[3]  = op_jal; // 3 = (000011)_2 -> JAL (Jump and Link)
     optable[5]  = op_bne; // 5 = (000101)_2 -> BNE (Branch if Not Equal)
     optable[8]  = op_addi; // 8 = (001000)_2 -> ADDI (Add Immediate Word)
     optable[9]  = op_addiu; // 9 = (001001)_2 -> ADDIU (Add Immediate Unsigned Word)

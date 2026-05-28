@@ -60,6 +60,7 @@ struct cpu_t {
 #define UNUSED(x) (void)(x)
 
 // constant for masking bits. formula: hex((1 << n) - 1)
+#define MASK_01BITS 0x1     // 0x1 = 0b1
 #define MASK_02BITS 0x3     // 0x3 = 0b11
 #define MASK_03BITS 0x7     // 0x7 = 0b111
 #define MASK_05BITS 0x1f    // 0x1f = 0b11111

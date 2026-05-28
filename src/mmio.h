@@ -58,7 +58,7 @@ extern uint8_t global_mainram[PSX_SIZE_MAINRAM];
 // BIOS region
 #define PSX_ADDR_BIOS   0x1fc00000 // BIOS address in KSEG
 //#define PSX_ADDR_BIOS_0 0x9fc00000 // BIOS address in KSEG0
-#define PSX_ADDR_BIOS_1 0xbfc00000 // BIOS address in KSEG1
+#define PSX_ADDR_BIOS_1 0xbfc00000 // BIOS address in KSEG1, entry point for the BIOS
 #define PSX_SIZE_BIOS   (512*1024) // 512 KB
 extern uint8_t global_bios[PSX_SIZE_BIOS];
 

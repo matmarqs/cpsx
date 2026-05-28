@@ -90,6 +90,21 @@ bool interconnect_store32(inter_t *inter, uint32_t addr, uint32_t value) {
     return true;
 }
 
+bool interconnect_store16(inter_t *inter, uint32_t addr, uint16_t value)
+{
+    if (addr & MASK_01BITS) {
+        err_debug("store16: Unaligned memory address: "F_HEX32, addr);
+        return false;
+    }
+    uint32_t offset;
+    uint8_t *target = interconnect_resolve(inter, addr, &offset, true);
+    if (!target) {
+        err_debug("store16: Unhandled memory address "F_HEX32, addr);
+    }
+    *(uint16_t *)(target + offset) = value;
+    return true;
+}
+
 void interconnect_init(inter_t *inter)
 {
     if (!read_bios("SCPH1001.BIN")) {

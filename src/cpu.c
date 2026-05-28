@@ -32,6 +32,11 @@ bool cpu_store32(cpu_t *cpu, uint32_t offset, uint32_t value)
     return interconnect_store32(cpu->interconnect, offset, value);
 }
 
+bool cpu_store16(cpu_t *cpu, uint32_t offset, uint16_t value)
+{
+    return interconnect_store16(cpu->interconnect, offset, value);
+}
+
 void cpu_init(cpu_t *cpu, inter_t *interconnect)
 {
     // initialize components
