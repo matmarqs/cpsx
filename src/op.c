@@ -134,6 +134,26 @@ static void op_sltu(cpu_t *cpu, instruction_t inst)
     printf("sltu $%d, $%d, $%d\n", rd, rs, rt);
 }
 
+static void op_add(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+
+    int32_t s = (int32_t) cpu_reg(cpu, rs);
+    int32_t t = (int32_t) cpu_reg(cpu, rt);
+
+    if (detect_overflow_i32(s, t)) {
+        // Integer Overflow exception, but we will handle that later
+        err_debug("op_add: Integer Overflow Exception caught");
+    }
+    else {
+        cpu_set_reg(cpu, rd, s + t);
+    }
+
+    printf("addu $%d, $%d, $%d\n", rd, rs, rt);
+}
+
 static void op_addu(cpu_t *cpu, instruction_t inst)
 {
     uint32_t rs = decode_instruction_rs(inst);
@@ -423,6 +443,7 @@ static void init_optable(op_table_t *optable)
     }
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
     global_special_optable[8] = op_jr; // 8 = (001000)_2 = JR (Jump Register)
+    global_special_optable[32] = op_add; // 32 = (100000)_2 = ADD (Add)
     global_special_optable[33] = op_addu; // 33 = (100001)_2 = ADDU (Add Unsigned Word)
     global_special_optable[36] = op_and; // 36 = (100100)_2 = AND (And)
     global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)

@@ -7,6 +7,15 @@
 #define MASK_KUSEG 0x1FFFFFFF
 
 // KUSEG     KSEG0     KSEG1
+// 1F000000h 9F000000h BF000000h  8192K  Expansion Region 1 (ROM/RAM)
+// region: 0x1f000000 <= x < 0x1f800000
+// ROM and RAM. There is also Expansion 1 Header.
+#define PSX_ADDR_EXPREGION1   0x1F000000
+#define PSX_SIZE_EXPREGION1   (8192*1024)
+extern uint8_t global_expregion1[PSX_SIZE_EXPREGION1];
+void expregion1_init(void);
+
+// KUSEG     KSEG0     KSEG1
 // 1F801000h 9F801000h BF801000h  4K     I/O Ports
 // region: 0x1f801000 <= x < 0x1f802000
 // Hardware registers in memory
@@ -15,15 +24,6 @@
 //#define PSX_ADDR_MEMCONTROL_1 0xBF801000
 #define PSX_SIZE_MEMCONTROL   (4*1024)  // 4 KB
 extern uint8_t global_memcontrol[PSX_SIZE_MEMCONTROL];
-
-// KUSEG     KSEG0     KSEG1
-// 1F000000h 9F000000h BF000000h  8192K  Expansion Region 1 (ROM/RAM)
-// region: 0x1f000000 <= x < 0x1f800000
-// ROM and RAM. There is also Expansion 1 Header.
-#define PSX_ADDR_EXPREGION1   0x1F000000
-#define PSX_SIZE_EXPREGION1   (8192*1024)
-extern uint8_t global_expregion1[PSX_SIZE_EXPREGION1];
-void expregion1_init(void);
 
 // KUSEG     KSEG0     KSEG1
 // 1F802000h 9F802000h BF802000h  8K     Expansion Region 2 (I/O Ports)
