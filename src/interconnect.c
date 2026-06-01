@@ -31,7 +31,7 @@ static uint8_t* interconnect_resolve(inter_t *inter, uint32_t memloc, uint32_t *
         return inter->mainram;
     }
     //// EXPREGION1 not implemented yet
-    //if (addr >= PSX_ADDR_EXPREGION1 && addr < PSX_ADDR_EXPREGION1 + PSX_SIZE_EXPREGION1) {
+    //if (PSX_ADDR_EXPREGION1 <= addr && addr < PSX_ADDR_EXPREGION1 + PSX_SIZE_EXPREGION1) {
     //    *out_offset = addr - PSX_ADDR_EXPREGION1;
     //    return inter->expregion1;
     //}
@@ -119,7 +119,15 @@ bool interconnect_store8(inter_t *inter, uint32_t addr, uint8_t value)
 uint8_t interconnect_load8(inter_t *inter, uint32_t addr)
 {
     uint32_t offset;
-    uint8_t *target = interconnect_resolve(inter, addr, &offset, false);
+    uint8_t *target = NULL;
+
+    // let's keep the code here for now, until we implement the EXP REGION 1 properly
+    uint32_t exp1 = addr_normalize(addr);
+    if (PSX_ADDR_EXPREGION1 <= exp1 && exp1 < PSX_ADDR_EXPREGION1 + PSX_SIZE_EXPREGION1) {
+        return 0xff;
+    }
+
+    target = interconnect_resolve(inter, addr, &offset, false);
 
     if (!target) {
         err_debug("load32: Unhandled memory address: "F_HEX32, addr);
@@ -137,6 +145,7 @@ void interconnect_init(inter_t *inter)
     }
     inter->bios = global_bios;
     inter->memcontrol = global_memcontrol;
+    //inter->expregion1 = global_expregion1;
     inter->expregion2 = global_expregion2;
     inter->regcontrol = global_regcontrol;
     inter->mainram = global_mainram;
