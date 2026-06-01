@@ -244,12 +244,11 @@ static void op_beq(cpu_t *cpu, instruction_t inst)
     int16_t offset = (int16_t) decode_instruction_imm(inst);
 
     uint32_t target = offset << 2;
-    uint32_t if_branch_pc = cpu->pc;
+    uint32_t if_branch_pc = (cpu->pc - 4) + target; // SUBTRACT 4, COMPENSATE FOR += 4 at main loop
 
     if (cpu_reg(cpu, rs) == cpu_reg(cpu, rt)) {
-        if_branch_pc += target;
+        cpu->pc = if_branch_pc;
     }
-    cpu->pc = if_branch_pc;
 
     printf("beq $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print absolute address (pseudo-instruction)
 
@@ -262,12 +261,11 @@ static void op_bne(cpu_t *cpu, instruction_t inst)
     int16_t offset = (int16_t) decode_instruction_imm(inst);
 
     uint32_t target = offset << 2;
-    uint32_t if_branch_pc = cpu->pc;
+    uint32_t if_branch_pc = (cpu->pc - 4) + target; // SUBTRACT 4, COMPENSATE FOR += 4 at main loop
 
     if (cpu_reg(cpu, rs) != cpu_reg(cpu, rt)) {
-        if_branch_pc += target;
+        cpu->pc = if_branch_pc;
     }
-    cpu->pc = if_branch_pc;
 
     printf("bne $%d, $%d, 0x%0x\n", rs, rt, if_branch_pc); // print absolute address (pseudo-instruction)
 }

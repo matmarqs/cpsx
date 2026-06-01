@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -ggdb
+CFLAGS = -Wall -Wextra -std=c99 -ggdb -O0
 LDFLAGS =
 
 TARGET_EXEC := emulator.elf

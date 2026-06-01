@@ -16,7 +16,7 @@
 typedef struct {
     uint8_t *bios; // BIOS ROM, 512 K
     uint8_t *memcontrol; // I/O Ports, 4K
-//    uint8_t *expregion1; // Expansion Region 1, 8192K, 8MB
+    uint8_t *expregion1; // Expansion Region 1, 8192K, 8MB
     uint8_t *expregion2; // Expansion Region 2, 8K
     uint8_t *regcontrol; // Internal Control Registers (Cache Control), (0.5 KB, 512 B)
     uint8_t *mainram; // Main RAM (2048 KB, 2 MB)

@@ -22,7 +22,8 @@ extern uint8_t global_memcontrol[PSX_SIZE_MEMCONTROL];
 // ROM and RAM. There is also Expansion 1 Header.
 #define PSX_ADDR_EXPREGION1   0x1F000000
 #define PSX_SIZE_EXPREGION1   (8192*1024)
-//extern uint8_t global_expregion1[PSX_SIZE_EXPREGION1];
+extern uint8_t global_expregion1[PSX_SIZE_EXPREGION1];
+void expregion1_init(void);
 
 // KUSEG     KSEG0     KSEG1
 // 1F802000h 9F802000h BF802000h  8K     Expansion Region 2 (I/O Ports)
