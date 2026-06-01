@@ -199,6 +199,34 @@ static void op_or(cpu_t *cpu, instruction_t inst)
     printf("or $%d, $%d, $%d\n", rd, rs, rt);
 }
 
+static void op_mfc0(cpu_t *cpu, instruction_t inst)
+{
+    // Move to Coprocessor 0
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+
+    switch (rd) { // rd is the cop0 register
+    case 3:
+    case 5:
+    case 6:
+    case 7:
+    case 9:
+    case 11:
+    case 13:
+        err_debug("op_mfc0: Unhandled load from $cop0_%d", rd);
+        break;
+    case 12:
+        break;
+    default:
+        err_debug("op_mfc0: Unhandled $cop0_%d register");
+        break;
+    }
+
+    cpu_load_delay(cpu, rt, cpu->cop0.regs[rd]);
+
+    printf("mfc0 $%d, $cop0_%d\n", rt, rd);
+}
+
 static void op_mtc0(cpu_t *cpu, instruction_t inst)
 {
     // Move to Coprocessor 0
@@ -223,7 +251,7 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
         cpu->cop0.regs[rd] = value;
         break;
     default:
-        err_debug("Unhandled $cop0_%d register");
+        err_debug("op_mtc0: Unhandled $cop0_%d register");
         break;
     }
 
@@ -391,5 +419,6 @@ static void init_optable(op_table_t *optable)
     for (int i = 0; i < 32; i++) {
         global_cop0_optable[i] = op_unhandled;
     }
-    global_cop0_optable[4] = op_mtc0; // 4 = (00100)_2 = MTC0 (Move to Coprocessor 0)
+    global_cop0_optable[0] = op_mfc0; // 0 = (00000)_2 = MFC0 (Move From Coprocessor 0)
+    global_cop0_optable[4] = op_mtc0; // 4 = (00100)_2 = MTC0 (Move To Coprocessor 0)
 }
