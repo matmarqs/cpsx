@@ -222,6 +222,7 @@ static void op_mfc0(cpu_t *cpu, instruction_t inst)
         break;
     }
 
+    // MFC instructions also have load delays
     cpu_load_delay(cpu, rt, cpu->cop0.regs[rd]);
 
     printf("mfc0 $%d, $cop0_%d\n", rt, rd);
@@ -248,12 +249,13 @@ static void op_mtc0(cpu_t *cpu, instruction_t inst)
         }
         break;
     case 12:
-        cpu->cop0.regs[rd] = value;
         break;
     default:
         err_debug("op_mtc0: Unhandled $cop0_%d register");
         break;
     }
+
+    cpu->cop0.regs[rd] = value;
 
     printf("mtc0 $%d, $cop0_%d\n", rt, rd);
 }
@@ -327,6 +329,15 @@ static void op_andi(cpu_t *cpu, instruction_t inst)
     uint32_t imm = decode_instruction_imm(inst);
     cpu_set_reg(cpu, rt, cpu_reg(cpu, rs) & imm);
     printf("andi $%d, $%d, 0x%x\n", rt, rs, imm);
+}
+
+static void op_and(cpu_t *cpu, instruction_t inst)
+{
+    uint32_t rs = decode_instruction_rs(inst);
+    uint32_t rt = decode_instruction_rt(inst);
+    uint32_t rd = decode_instruction_rd(inst);
+    cpu_set_reg(cpu, rd, cpu_reg(cpu, rs) & cpu_reg(cpu, rt));
+    printf("andi $%d, $%d, 0x%x\n", rd, rs, rt);
 }
 
 static void op_lw(cpu_t *cpu, instruction_t inst)
@@ -413,6 +424,7 @@ static void init_optable(op_table_t *optable)
     global_special_optable[0] = op_sll; // 0 = (000000)_2 = SLL (Shift Word Left Logical)
     global_special_optable[8] = op_jr; // 8 = (001000)_2 = JR (Jump Register)
     global_special_optable[33] = op_addu; // 33 = (100001)_2 = ADDU (Add Unsigned Word)
+    global_special_optable[36] = op_and; // 36 = (100100)_2 = AND (And)
     global_special_optable[37] = op_or; // 37 = (100101)_2 = OR (Or)
     global_special_optable[43] = op_sltu; // 43 = (101011)_2 = SLTU (Set on Less Than Unsigned)
 
